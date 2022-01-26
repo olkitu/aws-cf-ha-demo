@@ -1,0 +1,208 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create LoadBalancer, AutoScaleGroup and RDS
+
+Parameters:
+  VPCID:
+    Type: String
+    Description: Value of VPCId something like vpc-...
+  VPCCIDR:
+    Type: String
+    Description: CIDR of VPC network
+  PublicSubnet1ID:
+    Type: String
+    Description: Public Subnet 1
+  PublicSubnet2ID:
+    Type: String
+    Description: Public Subnet 2
+  PrivateSubnet1AID:
+    Type: String
+    Description: Private Subnet 1
+  PrivateSubnet2AID:
+    Type: String
+    Description: Private Subnet 2
+  DBPassword:
+    NoEcho: 'true'
+    Type: String
+    Description: Password MySQL database access
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+Mappings: 
+  RegionMap: 
+    us-east-1: 
+      HVM64: "ami-08e4e35cccc6189f4"
+    us-west-1: 
+      HVM64: "ami-02d03ce209db75523"
+    eu-west-1: 
+      HVM64: "ami-08e4e35cccc6189f4"
+
+Resources:
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP in
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        Description: Allow HTTP in
+        FromPort: 80
+        ToPort: 80
+        IpProtocol: tcp
+      VpcId: !Ref VPCID
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP & SSH in
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        Description: Allow HTTP in
+        FromPort: 80
+        ToPort: 80
+        IpProtocol: tcp
+      - CidrIp: 0.0.0.0/0
+        Description: Allow SSH in
+        FromPort: 22
+        ToPort: 22
+        IpProtocol: tcp    
+      VpcId: !Ref VPCID
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP & SSH in
+      SecurityGroupIngress:
+      - CidrIp: !Ref VPCCIDR
+        Description: Allow RDS from EC2
+        FromPort: 3306
+        ToPort: 3306
+        IpProtocol: tcp  
+      VpcId: !Ref VPCID
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      SecurityGroups:
+      - !Ref LoadBalancerSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1ID
+        - !Ref PublicSubnet2ID
+      Tags:
+      - Key: Name
+        Value: loadbalancer
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Matcher:
+        HttpCode: '200'
+      Protocol: HTTP
+      Port: 80
+      VpcId: !Ref VPCID
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Role to allow access to EC2 via Session Manager
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: "sessionmanager"
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - ssm:UpdateInstanceInformatio
+            - ssmmessages:CreateControlChannel
+            - ssmmessages:CreateDataChannel
+            - ssmmessages:OpenControlChannel
+            - ssmmessages:OpenDataChannel
+            Resource: '*'
+          - Effect: Allow
+            Action: s3:GetEncryptionConfiguration
+            Resource: '*'
+          - Effect: Allow
+            Action: kms:Decrypt
+            Resource: '*'
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !FindInMap
+      - RegionMap
+      - !Ref 'AWS::Region'
+      - HVM64
+      InstanceType: t2.micro
+      SecurityGroups:
+      - !Ref EC2SecurityGroup
+      IamInstanceProfile: !Ref InstanceProfile
+      UserData: !Base64 |
+        #!/bin/bash -x
+        yum update -y
+        tee /etc/yum.repos.d/mariadb.repo<<EOF
+        [mariadb]
+        name = MariaDB
+        baseurl = http://yum.mariadb.org/10.5/centos7-amd64
+        gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+        gpgcheck=1
+        EOF
+        yum install -y aws-cfn-bootstrap httpd MariaDB-client
+        systemctl enable httpd
+        systemctl start httpd
+        echo "[client]" > ~/.my.cnf
+        echo "user=admin" >> ~/.my.cnf
+        echo 'password=!Ref 'DBPassword' >> ~/.my.cnf
+        /opt/aws/bin/cfn-init -v --stack !Ref 'AWS::StackName' --resource LaunchConfig --configsets default --region !Ref 'AWS::Region'
+        /opt/aws/bin/cfn-signal -e $? --stack !Ref 'AWS::StackName' --resource AutoScaleGroup --region !Ref 'AWS::Region'
+  AutoScaleGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MinSize: '2'
+      MaxSize: '4'
+      DesiredCapacity: '2'
+      LaunchConfigurationName: !Ref LaunchConfig
+      VPCZoneIdentifier:
+      - !Ref PrivateSubnet1AID
+      - !Ref PrivateSubnet2AID
+      TargetGroupARNs:
+        - !Ref TargetGroup
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: db.t2.micro
+      AllocatedStorage: '10'
+      Engine: MySQL
+      MasterUsername: admin
+      MasterUserPassword: !Ref DBPassword
+      MultiAZ: true
+      DBSubnetGroupName: !Ref RDSSubnetGrup
+      VPCSecurityGroups:
+      - !Ref RDSSecurityGroup
+  RDSSubnetGrup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: SubnetGroup
+      SubnetIds:
+      - !Ref PrivateSubnet1AID
+      - !Ref PrivateSubnet2AID

@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S3 Bucket for Cloudformation Templates
+
+
+Resources:
+  DeploymentBucket:
+    Type: 'AWS::S3::Bucket'
+
+Outputs:
+  DeploymentBucket:
+    Value: !Ref DeploymentBucket
+    Export:
+      Name: cf-ha-demo-deployment-bucket
+      
