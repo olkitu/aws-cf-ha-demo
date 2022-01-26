@@ -187,6 +187,10 @@ Resources:
       - !Ref PrivateSubnet2AID
       TargetGroupARNs:
         - !Ref TargetGroup
+      Tags:
+      - Key: Name
+        PropagateAtLaunch: true
+        Value: app-autoscale
   RDSInstance:
     Type: AWS::RDS::DBInstance
     Properties:
