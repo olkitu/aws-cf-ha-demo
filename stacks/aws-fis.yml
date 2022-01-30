@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS Fault Injection Simulator template
+
+
+Resources:
+  FiSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - fis.amazonaws.com
+          Action: sts:AssumeRole
+          Condition:
+            StringEquals:
+              aws:SourceAccount: !Sub ${AWS::AccountId}
+            ArnLike:
+              aws:SourceArn: !Sub arn:aws:fis:${AWS::Region}:${AWS::AccountId}:experiment/*
+  EC2Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: EC2FisPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Sid: AllowFISExperimentRoleEC2Actions
+          Effect: Allow
+          Action:
+          - ec2:RebootInstances
+          - ec2:StopInstances
+          - ec2:StartInstances
+          - ec2:TerminateInstances
+          Resource: arn:aws:ec2:*:*:instance/*
+        - Sid: AllowFISExperimentRoleSpotInstanceActions
+          Effect: Allow
+          Action:
+          - ec2:SendSpotInstanceInterruptions
+          Resource: arn:aws:ec2:*:*:instance/*
+      Roles:
+      - !Ref FiSRole
+
+
+  ExperimentTemplate:
+    Type: AWS::FIS::ExperimentTemplate
+    Properties:
+      Description: AutoScaleGroup automatically testing
+      Actions:
+        Action:
+          ActionId: aws:ec2:terminate-instances
+      Targets:
+        Target:
+          SelectionMode: ALL
+          ResourceType: 'aws:ec2:instance'
+          ResourceTags:
+            Key: Name
+            Value: app-autoscale   
+      StopConditions:
+        - Source: none
+      RoleArn: !Ref FiSRole
+      Tags:
+        Key: Name
+        Value: AutoScaleGroup EC2 FIS experience
+    
