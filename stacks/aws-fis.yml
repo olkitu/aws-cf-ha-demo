@@ -55,7 +55,7 @@ Resources:
           SelectionMode: ALL
           ResourceType: 'aws:ec2:instance'
           ResourceTags:
-            Name: app-autoscale   
+            Name: cf-ha-demo-app-instance  
       StopConditions:
         - Source: none
       RoleArn: !GetAtt FiSRole.Arn
