@@ -1,7 +1,10 @@
 #!/bin/bash
 
-REGION="us-east-1"
 ACCOUNT="sandbox"
+
+if [[ -z "$REGION" ]];
+    REGION="us-east-1"
+fi
 
 DEPLOY_BUCKET=$(aws --profile $ACCOUNT --region $REGION cloudformation list-exports --query "Exports[?Name=='cf-ha-demo-deployment-bucket'].Value" --output text)
 

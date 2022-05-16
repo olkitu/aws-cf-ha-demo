@@ -1,6 +1,8 @@
 #!/bin/bash
 
-REGION="us-east-1"
+if [[ -z "$REGION" ]];
+    REGION="us-east-1"
+fi
 ACCOUNT="sandbox"
 
 DEPLOY_BUCKET=$(aws --profile $ACCOUNT --region $REGION cloudformation list-exports --query "Exports[?Name=='cf-ha-demo-deployment-bucket'].Value" --output text)
@@ -12,4 +14,4 @@ echo "Deploy aws-vpc.template.yaml template"
 
 aws --profile $ACCOUNT --region $REGION cloudformation deploy --template-file stacks/aws-vpc.template.yaml --stack-name cf-ha-vpc --s3-bucket $DEPLOY_BUCKET --capabilities CAPABILITY_IAM --parameter-overrides \
     NumberOfAZs=2 \
-    AvailabilityZones=us-east-1a,us-east-1b
+    AvailabilityZones=${REGION}a,${REGION}b

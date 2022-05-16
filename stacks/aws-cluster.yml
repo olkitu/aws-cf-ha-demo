@@ -35,11 +35,13 @@ Parameters:
 Mappings: 
   RegionMap: 
     us-east-1: 
-      HVM64: "ami-08e4e35cccc6189f4"
+      HVM64: "ami-0022f774911c1d690"
     us-west-1: 
-      HVM64: "ami-02d03ce209db75523"
+      HVM64: "ami-02541b8af977f6cdd"
     eu-west-1: 
-      HVM64: "ami-08e4e35cccc6189f4"
+      HVM64: "ami-0c1bc246476a5572b"
+    eu-central-1:
+      HVM64: "ami-09439f09c55136ecf"
 
 Resources:
   LoadBalancerSecurityGroup:
