@@ -53,10 +53,12 @@ Resources:
     Properties:
       Description: AutoScaleGroup automatically testing
       Actions:
-        Action:
+        TerminateInstances:
           ActionId: aws:ec2:terminate-instances
+          Targets:
+            Instances: AppInstances
       Targets:
-        Target:
+        AppInstances:
           SelectionMode: ALL
           ResourceType: 'aws:ec2:instance'
           ResourceTags:
@@ -68,6 +70,7 @@ Resources:
         Key: Name
         Value: AutoScaleGroup EC2 FIS experience
       LogConfiguration:
-        CloudWatchLogsConfiguration: !Sub '{"LogGroupArn": "aws:arn:logs:${AWS::Region}:${AWS::AccountId}:log-group:cf-ha-demo-logs"}'
+        CloudWatchLogsConfiguration:
+          LogGroupArn: !Sub aws:arn:logs:${AWS::Region}:${AWS::AccountId}:log-group:cf-ha-demo-logs
         LogSchemaVersion: 1
     
