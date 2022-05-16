@@ -37,7 +37,7 @@ aws --profile $ACCOUNT --region $REGION cloudformation deploy --template-file st
     DeployBucket=$DEPLOY_BUCKET
 
 # Import Database
-INSTANCE_ID=$(aws --profile sandbox ec2 describe-instances --filters "Name=tag:Name,Values=app-autoscale" --query Reservations[*].Instances[*].[InstanceId] --output text | head -n1)
+INSTANCE_ID=$(aws --profile $ACCOUNT --region $REGION ec2 describe-instances --filters "Name=tag:Name,Values=app-autoscale" --query Reservations[*].Instances[*].[InstanceId] --output text | head -n1)
 RDS_ENDPOINT=$(aws --profile $ACCOUNT --region $REGION cloudformation list-exports --query "Exports[?Name=='cf-ha-cluster-RDSEndPointAddress'].Value" --output text)
 
 aws --profile $ACCOUNT --region $REGION ssm send-command --document-name "AWS-RunShellScript" --document-version "1" --targets '[{"Key":"InstanceIds","Values":["${INSTANCE_ID}"]}]' --parameters '{"workingDirectory":[""],"executionTimeout":["3600"],"commands":["cat /tmp/test-db.sql | mysql -h ${RDS_ENDPOINT} -u admin -p fisdemodatabasepasssword202020"]}' --timeout-seconds 300 --max-concurrency "1" --max-errors "0" --region ${REGION}
