@@ -200,6 +200,9 @@ Resources:
       - Key: Name
         PropagateAtLaunch: true
         Value: cf-ha-demo-app-instance
+      - Key: ENV
+        PropagateAtLaunch: true
+        Value: fis
   RDSInstance:
     Type: AWS::RDS::DBInstance
     Properties:
