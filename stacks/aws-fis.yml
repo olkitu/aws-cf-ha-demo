@@ -55,8 +55,7 @@ Resources:
           SelectionMode: ALL
           ResourceType: 'aws:ec2:instance'
           ResourceTags:
-            Key: Name
-            Value: app-autoscale   
+            Name: app-autoscale   
       StopConditions:
         - Source: none
       RoleArn: !GetAtt FiSRole.Arn
