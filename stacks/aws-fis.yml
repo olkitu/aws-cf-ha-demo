@@ -43,6 +43,11 @@ Resources:
       - !Ref FiSRole
 
 
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: cf-ha-demo-logs
+
   ExperimentTemplate:
     Type: AWS::FIS::ExperimentTemplate
     Properties:
@@ -62,4 +67,7 @@ Resources:
       Tags:
         Key: Name
         Value: AutoScaleGroup EC2 FIS experience
+      LogConfiguration:
+        CloudWatchLogsConfiguration: !Sub '{"LogGroupArn": "aws:arn:logs:${AWS::Region}:${AWS::AccountId}:log-group:cf-ha-demo-logs"}'
+        LogSchemaVersion: 1
     
