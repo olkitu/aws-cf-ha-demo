@@ -55,7 +55,7 @@ Resources:
           SelectionMode: ALL
           ResourceType: 'aws:ec2:instance'
           ResourceTags:
-            Name: cf-ha-demo-app-instance  
+            Name: 'cf-ha-demo-app-instance'
       StopConditions:
         - Source: none
       RoleArn: !GetAtt FiSRole.Arn
