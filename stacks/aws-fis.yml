@@ -59,7 +59,7 @@ Resources:
             Value: app-autoscale   
       StopConditions:
         - Source: none
-      RoleArn: !Ref FiSRole
+      RoleArn: !GetAtt FiSRole.Arn
       Tags:
         Key: Name
         Value: AutoScaleGroup EC2 FIS experience
