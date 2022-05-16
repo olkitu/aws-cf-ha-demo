@@ -18,7 +18,7 @@ echo "Uploading code to S3"
 
 # Copy code to S3 bucket
 aws --profile $ACCOUNT --region $REGION s3 sync code s3://$DEPLOY_BUCKET/code --delete
-aws --profile $ACCOUNT --region $REGION s3 sync code s3://$DEPLOY_BUCKET/sql --delete
+aws --profile $ACCOUNT --region $REGION s3 sync sql s3://$DEPLOY_BUCKET/sql --delete
 
 echo "Deploying stack to AWS"
 
