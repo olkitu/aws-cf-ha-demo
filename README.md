@@ -10,3 +10,26 @@ This cluster environment will include:
 * Multi-AZ VPC from quick-start-aws-vpc template: https://aws-quickstart.github.io/quickstart-aws-vpc/
 * Application Load Balancer, EC2 AutoScale Application servers and Multi-AZ RDS MySQL instances `stacks/aws-cluster.yml`
 
+Deploying to AWS is easy with AWS CLI. 
+
+### Deploy deployment S3 Bucket
+
+This bucket used only for deployment process to save Cloudformation templates.
+
+```
+./create-deployment-bucket.sh <PROFILE> <REGION>
+```
+
+### Deploy VPC
+
+This will download latest quick-start-aws-vpc template from Github and deploy it to AWS.
+
+```
+./deploy-vpc.sh <PROFILE> <REGION>
+```
+
+### Deploy Cluster
+
+This will deploy Application Load Balancer, EC2 AutoScale Application servers and Multi-AZ RDS MySQL instance
+
+```
