@@ -39,6 +39,11 @@ Resources:
           Action:
           - ec2:SendSpotInstanceInterruptions
           Resource: arn:aws:ec2:*:*:instance/*
+        - Sid: AllowReadWriteToLogGroup
+          Effect: Allow
+          Action:
+          - logs:PutLogEvents
+          Resource: !GetAtt LogGroup.Arn
       Roles:
       - !Ref FiSRole
 
