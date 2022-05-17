@@ -215,7 +215,7 @@ Resources:
       DBSubnetGroupName: !Ref RDSSubnetGroup
       VPCSecurityGroups:
       - !Ref RDSSecurityGroup
-      tags:
+      Tags:
       - Key: ENV
         Value: fis
   RDSSubnetGroup:

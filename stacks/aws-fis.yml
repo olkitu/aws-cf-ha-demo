@@ -68,8 +68,8 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: cf-ha-demo-logs
-
+      RetentionInDays: 30
+  
   ExperimentTemplate:
     Type: AWS::FIS::ExperimentTemplate
     Properties:
