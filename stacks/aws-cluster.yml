@@ -215,6 +215,9 @@ Resources:
       DBSubnetGroupName: !Ref RDSSubnetGroup
       VPCSecurityGroups:
       - !Ref RDSSecurityGroup
+      tags:
+      - Key: ENV
+        Value: fis
   RDSSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
