@@ -71,7 +71,7 @@ Resources:
             Instances: AppInstances
       Targets:
         AppInstances:
-          SelectionMode: ALL
+          SelectionMode: COUNT(1)
           ResourceType: 'aws:ec2:instance'
           ResourceTags:
             ENV: fis
