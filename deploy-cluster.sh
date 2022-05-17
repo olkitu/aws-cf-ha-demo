@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ACCOUNT="sandbox"
+DB_PASS="fisdemodatabasepasssword202020"
 
 if [[ -z "$REGION" ]]; then
     REGION="us-east-1"
@@ -33,11 +34,11 @@ aws --profile $ACCOUNT --region $REGION cloudformation deploy --template-file st
     PublicSubnet2ID=$PublicSubnet2ID \
     PrivateSubnet1AID=$PrivateSubnet1AID \
     PrivateSubnet2AID=$PrivateSubnet2AID \
-    DBPassword=fisdemodatabasepasssword202020 \
+    DBPassword=$DB_PASS \
     DeployBucket=$DEPLOY_BUCKET
 
 # Import Database
-INSTANCE_ID=$(aws --profile $ACCOUNT --region $REGION ec2 describe-instances --filters "Name=tag:Name,Values=app-autoscale" --query Reservations[*].Instances[*].[InstanceId] --output text | head -n1)
+INSTANCE_ID=$(aws --profile $ACCOUNT --region $REGION ec2 describe-instances --filters Name=tag:Name,Values=app-autoscale Name=instance-state-name,Values=running --query Reservations[*].Instances[*].[InstanceId] --output text | head -n1)
 RDS_ENDPOINT=$(aws --profile $ACCOUNT --region $REGION cloudformation list-exports --query "Exports[?Name=='cf-ha-cluster-RDSEndPointAddress'].Value" --output text)
 
-aws --profile $ACCOUNT --region $REGION ssm send-command --document-name "AWS-RunShellScript" --document-version "1" --targets '[{"Key":"InstanceIds","Values":["'${INSTANCE_ID}'"]}]' --parameters '{"workingDirectory":[""],"executionTimeout":["3600"],"commands":["cat /tmp/test-db.sql | mysql -h ${RDS_ENDPOINT} -u admin -p fisdemodatabasepasssword202020"]}' --timeout-seconds 300 --max-concurrency "1" --max-errors "0" --region ${REGION}
+aws --profile $ACCOUNT --region $REGION ssm send-command --document-name "AWS-RunShellScript" --document-version "1" --targets '[{"Key":"InstanceIds","Values":["'${INSTANCE_ID}'"]}]' --parameters '{"workingDirectory":[""],"executionTimeout":["3600"],"commands":["cat /tmp/test-db.sql | mysql -h ${RDS_ENDPOINT} -u admin -p '${DB_PASS}'"]}' --timeout-seconds 300 --max-concurrency "1" --max-errors "0" --region ${REGION}
