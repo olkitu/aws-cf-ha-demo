@@ -39,6 +39,16 @@ Resources:
           Action:
           - ec2:SendSpotInstanceInterruptions
           Resource: arn:aws:ec2:*:*:instance/*
+        - Sid: AllowFISExperimentRoleRDSReboot
+          Effect: Allow
+          Action:
+          - rds:RebootDBInstance
+          Resource: arn:aws:rds:*:*:db:*
+        - Sid: AllowFISExperimentRoleRDSFailOver
+          Effect: Allow
+          Action:
+          - rds:FailoverDBCluster
+          Resource: arn:aws:rds:*:*:cluster:*
         - Effect: Allow
           Action:
           - logs:DescribeResourcePolicies
@@ -69,10 +79,21 @@ Resources:
           ActionId: aws:ec2:terminate-instances
           Targets:
             Instances: AppInstances
+        RDSReboot:
+          ActionId: aws:rds:reboot-db-instances
+          Targets:
+            DBInstances: DatabaseInstances
+          Parameters:
+            forceFailover: true
       Targets:
         AppInstances:
           SelectionMode: COUNT(1)
           ResourceType: 'aws:ec2:instance'
+          ResourceTags:
+            ENV: fis
+        DatabaseInstances:
+          SelectionMode: COUNT(1)
+          ResourceType: 'aws:rds:db'
           ResourceTags:
             ENV: fis
       StopConditions:
