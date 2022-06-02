@@ -32,6 +32,7 @@ This will download latest quick-start-aws-vpc template from Github and deploy it
 
 ```
 cd terraform
+terraform init
 AWS_PROFILE=<PROFILE> AWS_REGION=<REGION> terraform plan
 AWS_PROFILE=<PROFILE> AWS_REGION=<REGION> terraform apply
 ```
