@@ -213,6 +213,21 @@ Resources:
       MasterUserPassword: !Ref DBPassword
       MultiAZ: true
       DBSubnetGroupName: !Ref RDSSubnetGroup
+      PubliclyAccessible: true
+      VPCSecurityGroups:
+      - !Ref RDSSecurityGroup
+      Tags:
+      - Key: ENV
+        Value: fis
+  RDSReadReplica:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: db.t2.micro
+      AllocatedStorage: '10'
+      Engine: MySQL
+      SourceDBInstanceIdentifier: !Ref RDSInstance
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      PubliclyAccessible: true
       VPCSecurityGroups:
       - !Ref RDSSecurityGroup
       Tags:
