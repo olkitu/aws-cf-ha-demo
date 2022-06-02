@@ -1,5 +1,6 @@
 # Serverless v2 Database demo
 resource "aws_rds_cluster" "rds-serverless-v2" {
+  cluster_identifier  = "demodatabase"
   engine              = "aurora-mysql"
   engine_mode         = "provisioned"
   engine_version      = "8.0.mysql_aurora.3.02.0"
