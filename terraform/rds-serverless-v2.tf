@@ -17,15 +17,15 @@ resource "aws_rds_cluster" "rds-serverless-v2" {
 }
 
 resource "aws_rds_cluster_instance" "rds-serverless-v2" {
-  cluster_identifier = aws_rds_cluster.rds-serverless-v2-demo.id
+  cluster_identifier = aws_rds_cluster.rds-serverless-v2.id
   instance_class     = "db.serverless"
-  engine             = aws_rds_cluster.rds-serverless-v2-demo.engine
-  engine_version     = aws_rds_cluster.rds-serverless-v2-demo.engine_version
+  engine             = aws_rds_cluster.rds-serverless-v2.engine
+  engine_version     = aws_rds_cluster.rds-serverless-v2.engine_version
 }
 
 resource "aws_db_subnet_group" "rds-serverless-v2" {
   subnet_ids = [
-    cf-ha-vpc-PrivateSubnet1AID,
-    cf-ha-vpc-PrivateSubnet2AID
+    data.aws_cloudformation_export.cf-ha-vpc-PrivateSubnet1AID.value,
+    data.aws_cloudformation_export.cf-ha-vpc-PrivateSubnet2AID.value
   ]
 }
