@@ -32,3 +32,12 @@ data "aws_cloudformation_export" "cf-ha-vpc-PrivateSubnet1AID" {
 data "aws_cloudformation_export" "cf-ha-vpc-PrivateSubnet2AID" {
   name = "cf-ha-vpc-PrivateSubnet2AID"
 }
+
+
+# SecurityGroups Ids
+data "aws_cloudformation_export" "cf-ha-securitygroups-RDSSecurityGroupId" {
+  name = "cf-ha-securitygroups-RDSSecurityGroupId"
+  depends_on = [
+    aws_cloudformation_stack.cf-ha-securitygroups
+  ]
+}

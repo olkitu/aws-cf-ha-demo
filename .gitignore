@@ -2,3 +2,4 @@ cloudformation/aws-vpc.template.yaml
 .terraform
 terraform.tfstate
 terraform.tfstate.backup
+*.lock
