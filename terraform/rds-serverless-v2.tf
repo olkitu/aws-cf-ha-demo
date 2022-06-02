@@ -2,7 +2,7 @@
 resource "aws_rds_cluster" "rds-serverless-v2" {
   engine              = "aurora-mysql"
   engine_mode         = "provisioned"
-  engine_version      = "8.0"
+  engine_version      = "8.0.mysql_aurora.3.02.0"
   database_name       = "demo"
   master_username     = "admin"
   master_password     = "Qwerty1234"
