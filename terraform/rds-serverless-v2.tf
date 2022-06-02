@@ -7,6 +7,7 @@ resource "aws_rds_cluster" "rds-serverless-v2" {
   master_username     = "admin"
   master_password     = "Qwerty1234"
   skip_final_snapshot = true
+  storage_encrypted   = true
 
   db_subnet_group_name = aws_db_subnet_group.rds-serverless-v2.name
   vpc_security_group_ids = [
