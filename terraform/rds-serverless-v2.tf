@@ -1,11 +1,12 @@
 # Serverless v2 Database demo
 resource "aws_rds_cluster" "rds-serverless-v2" {
-  engine             = "aurora-mysql"
-  engine_mode        = "provisioned"
-  engine_version     = "8.0"
-  database_name      = "demo"
-  master_username    = "admin"
-  master_password    = "Qwerty1234"
+  engine              = "aurora-mysql"
+  engine_mode         = "provisioned"
+  engine_version      = "8.0"
+  database_name       = "demo"
+  master_username     = "admin"
+  master_password     = "Qwerty1234"
+  skip_final_snapshot = true
 
   db_subnet_group_name = aws_db_subnet_group.rds-serverless-v2.name
   vpc_security_group_ids = [
@@ -18,7 +19,7 @@ resource "aws_rds_cluster" "rds-serverless-v2" {
   }
 
   depends_on = [
-     aws_cloudformation_stack.cf-ha-securitygroups
+    aws_cloudformation_stack.cf-ha-securitygroups
   ]
 }
 
