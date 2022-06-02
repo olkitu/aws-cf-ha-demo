@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create AutoScalegroup
+
+Parameters:
+  DBPassword:
+    NoEcho: 'true'
+    Type: String
+    Description: Password MySQL database access
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+  DeployBucket:
+    Type: String
+    Description: S3 Bucket for deployment use
+
+Mappings: 
+  RegionMap: 
+    us-east-1: 
+      HVM64: "ami-0022f774911c1d690"
+    us-west-1: 
+      HVM64: "ami-02541b8af977f6cdd"
+    eu-west-1: 
+      HVM64: "ami-0c1bc246476a5572b"
+    eu-central-1:
+      HVM64: "ami-09439f09c55136ecf"
+
+Resources:
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Role to allow access to EC2 via Session Manager
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: "root"
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - ssm:UpdateInstanceInformation
+            - ssmmessages:CreateControlChannel
+            - ssmmessages:CreateDataChannel
+            - ssmmessages:OpenControlChannel
+            - ssmmessages:OpenDataChannel
+            Resource: '*'
+          - Effect: Allow
+            Action: s3:GetEncryptionConfiguration
+            Resource: '*'
+          - Effect: Allow
+            Action: kms:Decrypt
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub arn:aws:s3:::${DeployBucket}
+          - Effect: Allow
+            Action:
+            - s3:ListObject
+            - s3:GetObject
+            Resource:
+            - !Sub arn:aws:s3:::${DeployBucket}/*
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !FindInMap
+      - RegionMap
+      - !Ref 'AWS::Region'
+      - HVM64
+      InstanceType: t2.micro
+      SecurityGroups:
+      - !ImportValue cf-ha-securitygroups-EC2SecurityGroupId
+      IamInstanceProfile: !Ref InstanceProfile
+      UserData:
+        Fn::Base64:
+          !Sub | 
+            #!/bin/bash -x
+            yum update -y
+            yum install -y aws-cfn-bootstrap httpd mariadb php
+            systemctl enable httpd
+            systemctl start httpd
+            echo "[client]" > ~/.my.cnf
+            echo "user=admin" >> ~/.my.cnf
+            echo "password=${DBPassword}" >> ~/.my.cnf
+            aws s3 sync s3://${DeployBucket}/code/ /var/www/html
+            aws s3 sync s3://${DeployBucket}/sql/test-db.sql /tmp/test-db.sql
+            sed -i "s|AWS_INSTANCEAZ|$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)|g" /var/www/html/index.php
+            sed -i "s|AWS_INSTANCEID|$(curl -s http://169.254.169.254/latest/meta-data/instance-id)|g" /var/www/html/index.php
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --configsets default --region ${AWS::Region}
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource AutoScaleGroup --region ${AWS::Region}
+  AutoScaleGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MinSize: '2'
+      MaxSize: '4'
+      DesiredCapacity: '2'
+      LaunchConfigurationName: !Ref LaunchConfig
+      VPCZoneIdentifier:
+        - Fn::ImportValue: cf-ha-vpc-PrivateSubnet1AID
+        - Fn::ImportValue: cf-ha-vpc-PrivateSubnet2AID
+      TargetGroupARNs:
+        - Fn::ImportValue: cf-ha-loadbalancer-TargetGroupArn
+      Tags:
+      - Key: Name
+        PropagateAtLaunch: true
+        Value: cf-ha-demo-app-instance
+      - Key: ENV
+        PropagateAtLaunch: true
+        Value: fis
+
+Outputs:
+  LaunchConfig:
+    Value: !Ref LaunchConfig
+    Export:
+      Name: !Sub ${AWS::StackName}-LaunchConfig

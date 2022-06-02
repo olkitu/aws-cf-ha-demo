@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Load Balancer
+
+Resources:
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      SecurityGroups:
+      - Fn::ImportValue: cf-ha-securitygroups-LoadBalancerSecurityGroupId
+      Subnets:
+        - Fn::ImportValue: cf-ha-vpc-PrivateSubnet1AID
+        - Fn::ImportValue: cf-ha-vpc-PrivateSubnet2AID
+      Tags:
+      - Key: Name
+        Value: loadbalancer
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Matcher:
+        HttpCode: '200'
+      Protocol: HTTP
+      Port: 80
+      VpcId:
+        Fn::ImportValue: cf-ha-vpc-VPCID
+
+Outputs:
+  ApplicationLoadBalancerArn:
+    Value: !Ref ApplicationLoadBalancer
+    Export:
+      Name: !Sub ${AWS::StackName}-ApplicationLoadBalancerArn
+  ApplicationLoadBalancerDNSName:
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+    Export:
+      Name: !Sub ${AWS::StackName}-ApplicationLoadBalancerDNSName
+  ListenerArn:
+    Value: !Ref Listener
+    Export:
+      Name: !Sub ${AWS::StackName}-ListenerArn
+  TargetGroupArn:
+    Value: !Ref TargetGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-TargetGroupArn

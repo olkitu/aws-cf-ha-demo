@@ -1,1 +1,4 @@
-stacks/aws-vpc.template.yaml
+cloudformation/aws-vpc.template.yaml
+.terraform
+terraform.tfstate
+terraform.tfstate.backup

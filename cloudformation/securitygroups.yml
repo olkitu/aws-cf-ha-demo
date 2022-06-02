@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SecurityGroups
+
+Resources:
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP in
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        Description: Allow HTTP in
+        FromPort: 80
+        ToPort: 80
+        IpProtocol: tcp
+      VpcId: !ImportValue cf-ha-vpc-VPCID
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP & SSH in
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        Description: Allow HTTP in
+        FromPort: 80
+        ToPort: 80
+        IpProtocol: tcp
+      VpcId: !ImportValue cf-ha-vpc-VPCID
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP & SSH in
+      SecurityGroupIngress:
+      - CidrIp: !ImportValue cf-ha-vpc-VPCCIDR
+        Description: Allow RDS from EC2
+        FromPort: 3306
+        ToPort: 3306
+        IpProtocol: tcp  
+      VpcId: !ImportValue cf-ha-vpc-VPCID
+
+Outputs:
+  LoadBalancerSecurityGroupId:
+    Value: !GetAtt LoadBalancerSecurityGroup.GroupId
+    Export:
+      Name: !Sub ${AWS::StackName}-LoadBalancerSecurityGroupId
+  EC2SecurityGroupId:
+    Value: !GetAtt EC2SecurityGroup.GroupId
+    Export:
+      Name: !Sub ${AWS::StackName}-EC2SecurityGroupId
+  RDSSecurityGroupId:
+    Value: !GetAtt RDSSecurityGroup.GroupId
+    Export:
+      Name: !Sub ${AWS::StackName}-RDSSecurityGroupId

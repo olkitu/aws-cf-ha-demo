@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create LoadBalancer, AutoScaleGroup and RDS
+
+Parameters:
+  PrivateSubnet1AID:
+    Type: String
+    Description: Private Subnet 1
+  PrivateSubnet2AID:
+    Type: String
+    Description: Private Subnet 2
+  DBPassword:
+    NoEcho: 'true'
+    Type: String
+    Description: Password MySQL database access
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+Resources:
+  RDSCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      MasterUsername: admin
+      MasterUserPassword: !Ref DBPassword
+      DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      Engine: aurora
+      VpcSecurityGroupIds:
+      - Fn::ImportValue: cf-ha-securitygroups-RDSSecurityGroupId
+  RDSInstance1:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref RDSCluster
+      DBInstanceClass: db.t2.micro
+      Engine: MySQL
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      PubliclyAccessible: true
+      Tags:
+      - Key: ENV
+        Value: fis
+  RDSInstance2:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref RDSCluster
+      DBInstanceClass: db.t2.micro
+      Engine: MySQL
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      PubliclyAccessible: true
+      Tags:
+      - Key: ENV
+        Value: fis
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: SubnetGroup
+      SubnetIds:
+      - !Ref PrivateSubnet1AID
+      - !Ref PrivateSubnet2AID
+  RDSDBClusterParameterGroup:
+    Type: AWS::RDS::DBClusterParameterGroup
+    Properties:
+      Description: Aurora Cluster Parameter Group
+      Family: aurora5.6
+      Parameters:
+        time_zone: 'UTC'
+      
+
+Outputs:
+  RDSClusterId:
+    Value: !Ref RDSCluster
+    Export:
+      Name: !Sub ${AWS::StackName}-RDSClusterId
+  RDSClusterAddress:
+    Value: !GetAtt RDSCluster.Endpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-RDSClusterAddress
+  RDSClusterPort:
+    Value: !GetAtt RDSCluster.Endpoint.Port
+    Export:
+      Name: !Sub ${AWS::StackName}-RDSClusterPort
+  RDSClusterReadAddress:
+    Value: !GetAtt RDSCluster.ReadEndpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-RDSClusterReadAddress

@@ -6,7 +6,7 @@ fi
 
 PROFLE="sandbox"
 
-aws --profile $PROFLE --region $REGION cloudformation create-stack --template-body file://stacks/aws-deployment-bucket.yml --stack-name=cf-ha-deployment-bucket
+aws --profile $PROFLE --region $REGION cloudformation create-stack --template-body file://cloudformation/deployment-bucket.yml --stack-name=cf-ha-deployment-bucket
 
 echo "Wait for stack to be created"
 

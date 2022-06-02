@@ -8,7 +8,7 @@ This cluster environment will include:
 
 * S3 Deployment bucket `stacks/aws-deployment-bucket.yml`
 * Multi-AZ VPC from quick-start-aws-vpc template: https://aws-quickstart.github.io/quickstart-aws-vpc/
-* Application Load Balancer, EC2 AutoScale Application servers and Multi-AZ RDS MySQL instances `stacks/aws-cluster.yml`
+* Application Load Balancer, EC2 AutoScale Application servers and Multi-AZ RDS MySQL instances
 
 Deploying to AWS is easy with AWS CLI. 
 
@@ -28,8 +28,10 @@ This will download latest quick-start-aws-vpc template from Github and deploy it
 ./deploy-vpc.sh <PROFILE> <REGION>
 ```
 
-### Deploy Cluster
+### Deploy all other templates with Terraform
 
-This will deploy Application Load Balancer, EC2 AutoScale Application servers and Multi-AZ RDS MySQL instance
-
+```
+cd terraform
+AWS_PROFILE=<PROFILE> AWS_REGION=<REGION> terraform plan
+AWS_PROFILE=<PROFILE> AWS_REGION=<REGION> terraform apply
 ```
