@@ -211,6 +211,8 @@ Resources:
       DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
       DBSubnetGroupName: !Ref RDSSubnetGroup
       Engine: aurora
+      VpcSecurityGroupIds:
+      - !Ref RDSSecurityGroup
   RDSInstance1:
     Type: AWS::RDS::DBInstance
     Properties:
@@ -218,12 +220,8 @@ Resources:
       DBInstanceClass: db.t2.micro
       AllocatedStorage: '10'
       Engine: MySQL
-      MasterUsername: admin
-      MasterUserPassword: !Ref DBPassword
       DBSubnetGroupName: !Ref RDSSubnetGroup
       PubliclyAccessible: true
-      VPCSecurityGroups: 
-      - !Ref RDSSecurityGroup
       Tags:
       - Key: ENV
         Value: fis
@@ -236,8 +234,6 @@ Resources:
       Engine: MySQL
       DBSubnetGroupName: !Ref RDSSubnetGroup
       PubliclyAccessible: true
-      VPCSecurityGroups:
-      - !Ref RDSSecurityGroup
       Tags:
       - Key: ENV
         Value: fis
