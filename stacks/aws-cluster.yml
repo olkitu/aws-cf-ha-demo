@@ -218,7 +218,6 @@ Resources:
     Properties:
       DBClusterIdentifier: !Ref RDSCluster
       DBInstanceClass: db.t2.micro
-      AllocatedStorage: '10'
       Engine: MySQL
       DBSubnetGroupName: !Ref RDSSubnetGroup
       PubliclyAccessible: true
@@ -230,7 +229,6 @@ Resources:
     Properties:
       DBClusterIdentifier: !Ref RDSCluster
       DBInstanceClass: db.t2.micro
-      AllocatedStorage: '10'
       Engine: MySQL
       DBSubnetGroupName: !Ref RDSSubnetGroup
       PubliclyAccessible: true
